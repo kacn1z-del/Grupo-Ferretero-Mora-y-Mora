@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  /* Mora y Mora Custom Palette */
+  --color-brand-orange-50: #fff7ed;
+  --color-brand-orange-100: #ffedd5;
+  --color-brand-orange-500: #f97316;
+  --color-brand-orange-600: #ea580c;
+  --color-brand-orange-700: #c2410c;
+  --color-brand-blue-900: #1e3a8a;
+  --color-brand-blue-950: #172554;
+  --color-brand-zinc-900: #18181b;
+  --color-brand-zinc-950: #09090b;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: #fafafa;
+    color: #1c1917;
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Grupo Ferretero Mora y Mora",
+  "description": "Sitio web oficial de Grupo Ferretero Mora y Mora. Incluye catálogo interactivo de productos ferreteros y de construcción, carrito de compras dinámico, calculadoras de materiales y generador de cotizaciones oficiales en línea.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
