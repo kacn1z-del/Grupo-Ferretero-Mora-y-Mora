@@ -1,12 +1,12 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="www.Kenychinchilla.com/>
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
 
-# Run and Kenychinchilla.com
+# Run and deploy your AI Studio app
 
 This contains everything you need to run your app locally.
 
-View your Keny Chinchilla Navarro : www.kenychilla.com
+View your app in AI Studio: https://ai.studio/apps/a3fe12fb-2e0b-4c09-80e0-86bcc9f2c99c
 
 ## Run Locally
 
