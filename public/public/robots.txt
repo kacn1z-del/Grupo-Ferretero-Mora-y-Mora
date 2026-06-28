@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://grupo-ferretero-mora-y-mora.vercel.app/sitemap.xml
