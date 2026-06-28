@@ -110,9 +110,7 @@ export default function Header({
               className="flex items-center space-x-3 cursor-pointer select-none group"
               onClick={onNavigateToCatalog}
             >
-              <div className="bg-gradient-to-br from-brand-orange-500 to-brand-orange-600 p-2.5 rounded-xl shadow-lg shadow-brand-orange-600/20 group-hover:scale-105 transition-transform">
-                <Hammer className="w-6 h-6 text-white" />
-              </div>
+             <img src="https://i.ibb.co/Y4Qwsp5P/2-B6-D1-FB4-9-E37-4-FCB-80-A8-FC01-E91-BDA6-C.png" alt="Mora y Mora" className="h-12 w-auto object-contain" />
               <div>
                 <h1 className="text-xl md:text-2xl font-display font-extrabold tracking-tight leading-none">
                   MORA Y MORA
