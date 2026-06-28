@@ -6,7 +6,7 @@
 
 This contains everything you need to run your app locally.
 
-View your app in AI Studio: https://ai.studio/apps/a3fe12fb-2e0b-4c09-80e0-86bcc9f2c99c
+View your Keny Chinchilla Navarro : www.kenychilla.com
 
 ## Run Locally
 
