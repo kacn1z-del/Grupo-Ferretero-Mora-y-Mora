@@ -111,14 +111,14 @@ export default function Header({
               onClick={onNavigateToCatalog}
             >
              <img src="https://i.ibb.co/Y4Qwsp5P/2-B6-D1-FB4-9-E37-4-FCB-80-A8-FC01-E91-BDA6-C.png" alt="Mora y Mora" className="h-12 w-auto object-contain" />
-              <div>
-                <h1 className="text-xl md:text-2xl font-display font-extrabold tracking-tight leading-none">
-                  MORA Y MORA
-                </h1>
-                <span className="text-[10px] md:text-xs text-brand-orange-500 font-bold tracking-[0.15em] uppercase block mt-0.5">
-                  {t("title").toUpperCase()}
-                </span>
-              </div>
+            <div>
+  <h1 className="text-xl md:text-2xl font-displ...
+    MORA Y MORA
+  </h1>
+  <span className="text-[10px] md:text-xs text-b...
+    {t("title").toUpperCase()}
+  </span>
+</div>
             </div>
 
             {/* Desktop Menu Trigger */}
