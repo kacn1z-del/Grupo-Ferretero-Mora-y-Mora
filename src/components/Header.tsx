@@ -4,9 +4,10 @@
  */
 
 import React from "react";
-import { ShoppingCart, Calculator, Search, Hammer, Phone, MapPin, Menu, X, Clock } from "lucide-react";
+import { ShoppingCart, Calculator, Search, Hammer, Phone, MapPin, Menu, X, Clock, Shield, Globe } from "lucide-react";
 import { CartItem, QuotationRequest } from "../types";
 import MenuDrawer from "./MenuDrawer";
+import { useLanguage, LANGUAGES, LanguageCode } from "../contexts/LanguageContext";
 
 interface HeaderProps {
   cart: CartItem[];
@@ -20,6 +21,7 @@ interface HeaderProps {
   categories: Array<{ id: string; name: string; icon: string }>;
   quoteHistory?: QuotationRequest[];
   onViewHistoryQuote?: (quote: QuotationRequest) => void;
+  onOpenAdminPortal: () => void;
 }
 
 export default function Header({
@@ -34,32 +36,67 @@ export default function Header({
   categories,
   quoteHistory = [],
   onViewHistoryQuote = () => {},
+  onOpenAdminPortal,
 }: HeaderProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const { language, setLanguage, t } = useLanguage();
+
+  const getCategoryTranslation = (id: string, defaultName: string) => {
+    if (id === "all") return t("all", "Todos");
+    if (id === "construccion") return t("construccion", "Construcción");
+    if (id === "herramientas") return t("herramientas", "Herramientas Eléctricas");
+    if (id === "pintura") return t("pinturas", "Pinturas y Acabados");
+    if (id === "electricidad") return t("electricidad", "Electricidad");
+    if (id === "plomeria") return t("fontaneria", "Plomería y Grifería");
+    return defaultName;
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full" id="mora-header">
       {/* Top micro-bar: Info and Contact */}
       <div className="bg-brand-zinc-950 text-stone-300 text-xs py-2 px-4 md:px-8 border-b border-stone-800 flex flex-wrap justify-between items-center gap-2">
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-6 flex-wrap">
           <span className="flex items-center gap-1.5">
             <Phone className="w-3.5 h-3.5 text-brand-orange-500" />
-            <span className="font-medium text-stone-200">Matriz:</span> 2410-5890
+            <span className="font-medium text-stone-200">Acosta:</span> 
+            <a href="tel:24101515" className="hover:text-brand-orange-400 font-mono">2410-1515</a>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Phone className="w-3.5 h-3.5 text-brand-orange-500" />
+            <span className="font-medium text-stone-200">Jorco:</span> 
+            <a href="tel:24104848" className="hover:text-brand-orange-400 font-mono">2410-4848</a>
           </span>
           <span className="hidden sm:flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-brand-orange-500" />
-            <span className="font-medium text-stone-200">Locales:</span> Acosta (Parque, Clínica CCSS) y Vuelta de Jorco, CR
+            <span className="font-medium text-stone-200">{t("locales")}:</span> Acosta (Parque / Clínica) y Vuelta de Jorco, CR
           </span>
           <span className="hidden lg:flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-brand-orange-500" />
-            <span className="font-medium text-stone-200">Horario:</span> Lun-Sáb: 7:00 AM - 6:00 PM
+            <span className="font-medium text-stone-200">{t("schedule")}:</span> Lun-Sáb: 7:00 AM - 6:00 PM
           </span>
         </div>
         <div className="flex items-center space-x-4">
-          <span className="bg-brand-orange-600/20 text-brand-orange-100 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border border-brand-orange-600/30">
+          <span className="hidden xl:inline bg-brand-orange-600/20 text-brand-orange-100 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border border-brand-orange-600/30">
             Entrega a Obra Gratuita desde ₡150,000
           </span>
+          
+          {/* Elegant Language Selector */}
+          <div className="flex items-center space-x-1.5 bg-stone-900 border border-stone-850 px-2 py-1 rounded-md text-stone-300">
+            <Globe className="w-3.5 h-3.5 text-brand-orange-500 shrink-0" />
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as LanguageCode)}
+              className="bg-transparent text-[11px] font-semibold text-stone-200 focus:outline-none cursor-pointer pr-1"
+              title="Seleccionar idioma / Select language"
+            >
+              {LANGUAGES.map((lang) => (
+                <option key={lang.code} value={lang.code} className="bg-stone-950 text-stone-200">
+                  {lang.flag} {lang.nativeName}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -81,7 +118,7 @@ export default function Header({
                   MORA Y MORA
                 </h1>
                 <span className="text-[10px] md:text-xs text-brand-orange-500 font-bold tracking-[0.15em] uppercase block mt-0.5">
-                  GRUPO FERRETERO
+                  {t("title").toUpperCase()}
                 </span>
               </div>
             </div>
@@ -104,7 +141,7 @@ export default function Header({
             </div>
             <input
               type="text"
-              placeholder="Buscar cemento, rotomartillo, tubos PVC..."
+              placeholder={t("searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full bg-brand-blue-900/50 border border-brand-blue-900/80 text-white rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-brand-orange-500 focus:ring-1 focus:ring-brand-orange-500 placeholder-stone-400 transition-all shadow-inner"
@@ -127,7 +164,17 @@ export default function Header({
               className="flex items-center space-x-1.5 bg-brand-blue-900/40 hover:bg-brand-blue-900 text-stone-100 hover:text-white border border-brand-blue-900 px-3.5 py-2 rounded-lg text-sm transition-colors shadow-sm cursor-pointer"
             >
               <Calculator className="w-4 h-4 text-brand-orange-500" />
-              <span className="hidden sm:inline font-medium">Calculadoras de Obra</span>
+              <span className="hidden sm:inline font-medium">{t("calculatorsTab")}</span>
+            </button>
+
+            {/* Administrative Portal trigger */}
+            <button
+              onClick={onOpenAdminPortal}
+              className="hidden lg:flex items-center space-x-1.5 bg-brand-blue-900/40 hover:bg-brand-blue-900 text-stone-100 hover:text-white border border-brand-blue-900/80 px-3.5 py-2 rounded-lg text-sm transition-colors shadow-sm cursor-pointer font-bold"
+              title="Portal para administradores de Jorco, Acosta Centro y Acosta Norte"
+            >
+              <Shield className="w-4 h-4 text-brand-orange-500" />
+              <span>{t("adminPortal")}</span>
             </button>
 
             {/* Shopping Cart trigger */}
@@ -137,7 +184,7 @@ export default function Header({
               id="cart-trigger-btn"
             >
               <ShoppingCart className="w-4 h-4" />
-              <span className="hidden sm:inline">Mi Cotización</span>
+              <span className="hidden sm:inline">{t("cartTab")}</span>
               {cartCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-white text-brand-orange-700 font-mono text-[11px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-brand-orange-600 animate-pulse shadow-md">
                   {cartCount}
@@ -165,7 +212,7 @@ export default function Header({
           </div>
           <input
             type="text"
-            placeholder="Buscar productos en Mora y Mora..."
+            placeholder={t("searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full bg-brand-blue-900/50 border border-brand-blue-900/80 text-white rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-brand-orange-500"
@@ -177,7 +224,7 @@ export default function Header({
       <div className="bg-white border-b border-stone-200/80 py-2.5 px-4 md:px-8 overflow-x-auto scrollbar-none shadow-xs">
         <div className="max-w-7xl mx-auto flex items-center space-x-1.5 min-w-max">
           <span className="text-stone-400 text-xs font-semibold uppercase tracking-wider mr-3 hidden lg:inline">
-            Categorías:
+            {t("all_categories", "Categorías")}:
           </span>
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat.id;
@@ -191,7 +238,7 @@ export default function Header({
                     : "text-stone-600 bg-stone-50 border-stone-200 hover:bg-stone-100 hover:text-stone-900"
                 }`}
               >
-                {cat.name}
+                {getCategoryTranslation(cat.id, cat.name)}
               </button>
             );
           })}
@@ -208,6 +255,7 @@ export default function Header({
         onNavigateToCalculators={onNavigateToCalculators}
         quoteHistory={quoteHistory}
         onViewHistoryQuote={onViewHistoryQuote}
+        onOpenAdminPortal={onOpenAdminPortal}
       />
     </header>
   );

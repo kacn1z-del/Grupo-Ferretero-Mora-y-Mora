@@ -14,6 +14,8 @@ export interface Product {
   stock: number;
   featured: boolean;
   specifications: Record<string, string>;
+  branchStock?: Record<string, number>; // Stock per branch: acosta_centro, acosta, jorco
+  branchPhotos?: Record<string, string[]>; // Base64 or URL photos uploaded per branch
 }
 
 export interface CartItem {
@@ -31,6 +33,7 @@ export interface QuotationRequest {
   address: string;
   projectType: string; // "Residencial" | "Comercial" | "Industrial" | "Obra Pública" | "Particular"
   notes?: string;
+  pickupBranch?: string; // "acosta_centro" | "acosta" | "jorco"
   items: CartItem[];
   subtotal: number;
   iva: number;

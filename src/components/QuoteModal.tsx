@@ -6,6 +6,7 @@
 import React from "react";
 import { X, Printer, Phone, Calendar, Mail, FileCheck, Copy, Check } from "lucide-react";
 import { QuotationRequest } from "../types";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface QuoteModalProps {
   quote: QuotationRequest | null;
@@ -13,6 +14,7 @@ interface QuoteModalProps {
 }
 
 export default function QuoteModal({ quote, onClose }: QuoteModalProps) {
+  const { t } = useLanguage();
   const [copied, setCopied] = React.useState(false);
 
   if (!quote) return null;
@@ -53,8 +55,13 @@ export default function QuoteModal({ quote, onClose }: QuoteModalProps) {
     .map(it => `• ${it.quantity}x ${it.product.name} (${it.product.brand})`)
     .join("%0A");
   
-  const waMessage = `Hola Grupo Ferretero Mora y Mora Costa Rica, solicito formalizar mi Cotización Oficial *${quote.id}*:%0A%0A*Cliente:* ${quote.customerName}%0A*Empresa:* ${quote.companyName || "N/A"}%0A*Teléfono:* ${quote.phone}%0A*Proyecto:* ${quote.projectType}%0A%0A*Artículos:*%0A${itemsSummary}%0A%0A*Subtotal:* ${formattedSubtotal}%0A*IVA (13%):* ${formattedIva}%0A*Envío / Flete:* ${formattedShipping}%0A*Total Estimado:* ${formattedTotal}%0A%0AFavor de indicarme los métodos de pago en Colones, depósito bancario y tiempos de entrega. ¡Muchas gracias!`;
-  const waUrl = `https://wa.me/50688885890?text=${waMessage}`;
+  const entregaSurtidoInfo = quote.pickupBranch
+    ? `*Retiro en Sucursal:* Mora y Mora ${quote.pickupBranch === "acosta_centro" ? "Acosta Centro" : quote.pickupBranch === "acosta" ? "Acosta Norte (Principal)" : "Vuelta de Jorco"}`
+    : `*Envío a Domicilio:* ${quote.address}`;
+
+  const waMessage = `Hola Grupo Ferretero Mora y Mora Costa Rica, solicito formalizar mi Cotización Oficial *${quote.id}*:%0A%0A*Cliente:* ${quote.customerName}%0A*Empresa:* ${quote.companyName || "N/A"}%0A*Teléfono:* ${quote.phone}%0A*Proyecto:* ${quote.projectType}%0A${entregaSurtidoInfo}%0A%0A*Artículos:*%0A${itemsSummary}%0A%0A*Subtotal:* ${formattedSubtotal}%0A*IVA (13%):* ${formattedIva}%0A*Envío / Flete:* ${formattedShipping}%0A*Total Estimado:* ${formattedTotal}%0A%0AFavor de indicarme los métodos de pago en Colones, depósito bancario y tiempos de entrega. ¡Muchas gracias!`;
+  const waUrlAcosta = `https://wa.me/50660686454?text=${waMessage}`;
+  const waUrlJorco = `https://wa.me/50687113034?text=${waMessage}`;
 
   return (
     <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto print:bg-white print:p-0" id="quote-modal-overlay">
@@ -67,7 +74,7 @@ export default function QuoteModal({ quote, onClose }: QuoteModalProps) {
           <div className="flex items-center space-x-2">
             <FileCheck className="w-5 h-5 text-emerald-600" />
             <h3 className="font-display font-extrabold text-stone-800 text-sm md:text-base">
-              ¡Cotización Generada Exitosamente!
+              {t("quoteSuccessTitle", "¡Cotización Generada Exitosamente!")}
             </h3>
           </div>
           
@@ -76,35 +83,52 @@ export default function QuoteModal({ quote, onClose }: QuoteModalProps) {
             <button
               onClick={handlePrint}
               className="p-2 text-stone-600 hover:text-stone-950 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
-              title="Imprimir documento"
+              title={t("printTitle", "Imprimir documento")}
             >
               <Printer className="w-4 h-4" />
-              <span className="hidden sm:inline">Imprimir</span>
+              <span className="hidden sm:inline">{t("print", "Imprimir")}</span>
             </button>
 
             {/* Copy button */}
             <button
               onClick={handleCopy}
               className="p-2 text-stone-600 hover:text-stone-950 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
-              title="Copiar resumen"
+              title={t("copyTitle", "Copiar resumen")}
             >
               {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              <span className="hidden sm:inline">{copied ? "Copiado" : "Copiar Folio"}</span>
+              <span className="hidden sm:inline">{copied ? t("copied", "Copiado") : t("copyFolio", "Copiar Folio")}</span>
             </button>
 
-            {/* WhatsApp Link button */}
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold"
-              title="Enviar a asesor de ventas por WhatsApp"
-            >
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.504-5.714-1.464L0 24zm6.59-4.846c1.6.95 3.198 1.485 4.85 1.485 5.47 0 9.917-4.417 9.92-9.845.002-2.628-1.02-5.101-2.88-6.963-1.858-1.861-4.328-2.885-6.957-2.887-5.483 0-9.93 4.418-9.933 9.848-.001 1.96.513 3.878 1.49 5.597l-.98 3.58 3.684-.966zm11.534-7.55c-.3-.15-1.772-.875-2.047-.975-.275-.1-.475-.15-.675.15-.2.3-.775.975-.95 1.175-.175.2-.35.225-.65.075-1.2-.6-1.95-1.05-2.725-2.375-.203-.35-.043-.544.131-.718.156-.156.3-.35.45-.525.07-.083.125-.162.175-.25.075-.15.037-.287-.018-.4-.056-.112-.475-1.15-.65-1.575-.171-.412-.345-.356-.475-.362-.122-.006-.263-.007-.402-.007-.139 0-.365.052-.556.262-.191.21-1.284 1.253-1.284 3.056s1.312 3.544 1.494 3.794c.182.25 2.583 3.944 6.257 5.531.874.378 1.557.602 2.087.771.878.279 1.678.24 2.312.145.706-.107 1.772-.725 2.022-1.425.25-.7 0-1.25-.1-1.375-.075-.125-.275-.2-.575-.35z" />
-              </svg>
-              <span>Enviar a WhatsApp</span>
-            </a>
+            {/* WhatsApp Branch Selectors */}
+            <div className="flex items-center gap-1.5">
+              <a
+                href={waUrlAcosta}
+                target="_blank"
+                rel="noreferrer"
+                className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold"
+                title={t("sendAcostaTitle", "Enviar cotización a Sucursal Acosta")}
+              >
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.504-5.714-1.464L0 24zm6.59-4.846c1.6.95 3.198 1.485 4.85 1.485 5.47 0 9.917-4.417 9.92-9.845.002-2.628-1.02-5.101-2.88-6.963-1.858-1.861-4.328-2.885-6.957-2.887-5.483 0-9.93 4.418-9.933 9.848-.001 1.96.513 3.878 1.49 5.597l-.98 3.58 3.684-.966zm11.534-7.55c-.3-.15-1.772-.875-2.047-.975-.275-.1-.475-.15-.675.15-.2.3-.775.975-.95 1.175-.175.2-.35.225-.65.075-1.2-.6-1.95-1.05-2.725-2.375-.203-.35-.043-.544.131-.718.156-.156.3-.35.45-.525.07-.083.125-.162.175-.25.075-.15.037-.287-.018-.4-.056-.112-.475-1.15-.65-1.575-.171-.412-.345-.356-.475-.362-.122-.006-.263-.007-.402-.007-.139 0-.365.052-.556.262-.191.21-1.284 1.253-1.284 3.056s1.312 3.544 1.494 3.794c.182.25 2.583 3.944 6.257 5.531.874.378 1.557.602 2.087.771.878.279 1.678.24 2.312.145.706-.107 1.772-.725 2.022-1.425.25-.7 0-1.25-.1-1.375-.075-.125-.275-.2-.575-.35z" />
+                </svg>
+                <span className="hidden md:inline">{t("sendAcosta", "Enviar a Acosta")}</span>
+                <span className="md:hidden">Acosta WA</span>
+              </a>
+
+              <a
+                href={waUrlJorco}
+                target="_blank"
+                rel="noreferrer"
+                className="p-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold"
+                title={t("sendJorcoTitle", "Enviar cotización a Sucursal Vuelta de Jorco")}
+              >
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.504-5.714-1.464L0 24zm6.59-4.846c1.6.95 3.198 1.485 4.85 1.485 5.47 0 9.917-4.417 9.92-9.845.002-2.628-1.02-5.101-2.88-6.963-1.858-1.861-4.328-2.885-6.957-2.887-5.483 0-9.93 4.418-9.933 9.848-.001 1.96.513 3.878 1.49 5.597l-.98 3.58 3.684-.966zm11.534-7.55c-.3-.15-1.772-.875-2.047-.975-.275-.1-.475-.15-.675.15-.2.3-.775.975-.95 1.175-.175.2-.35.225-.65.075-1.2-.6-1.95-1.05-2.725-2.375-.203-.35-.043-.544.131-.718.156-.156.3-.35.45-.525.07-.083.125-.162.175-.25.075-.15.037-.287-.018-.4-.056-.112-.475-1.15-.65-1.575-.171-.412-.345-.356-.475-.362-.122-.006-.263-.007-.402-.007-.139 0-.365.052-.556.262-.191.21-1.284 1.253-1.284 3.056s1.312 3.544 1.494 3.794c.182.25 2.583 3.944 6.257 5.531.874.378 1.557.602 2.087.771.878.279 1.678.24 2.312.145.706-.107 1.772-.725 2.022-1.425.25-.7 0-1.25-.1-1.375-.075-.125-.275-.2-.575-.35z" />
+                </svg>
+                <span className="hidden md:inline">{t("sendJorco", "Enviar a Jorco")}</span>
+                <span className="md:hidden">Jorco WA</span>
+              </a>
+            </div>
 
             {/* Close Button */}
             <button
@@ -137,10 +161,10 @@ export default function QuoteModal({ quote, onClose }: QuoteModalProps) {
                   CÉDULA JURÍDICA: 3-101-789456 • REGISTRO COMERCIAL NACIONAL
                 </p>
                 <div className="text-xs text-stone-600 mt-3 space-y-1.5 leading-normal">
-                  <p><strong>• Sucursal Acosta Centro:</strong> Frente al Parque Central de Acosta, San José, Costa Rica.</p>
-                  <p><strong>• Sucursal Acosta Norte:</strong> 100 metros norte de la Clínica de la CCSS, Acosta.</p>
-                  <p><strong>• Sucursal Vuelta de Jorco:</strong> Vuelta de Jorco, contiguo al Ebais / piso.</p>
-                  <p className="pt-1"><strong>Teléfono Surtidos:</strong> 2410-5890 • <strong>WhatsApp:</strong> +506 8888-5890 • <strong>Email:</strong> ventas@ferreteriamoraymora.com</p>
+                  <p><strong>• Oficina Principal (Acosta Norte):</strong> 100 metros norte de la Clínica de la CCSS, San Ignacio. Tel: 2410-1515 • WA: +506 6068-6454</p>
+                  <p><strong>• Sucursal Acosta Centro:</strong> Frente al Parque Central, San Ignacio de Acosta. (Consultas canalizadas por Acosta Norte)</p>
+                  <p><strong>• Sucursal Vuelta de Jorco:</strong> Vuelta de Jorco, contiguo al Supermercado Palí. Tels: 2410-4848 / 2410-4747 • WA: +506 8711-3034</p>
+                  <p className="pt-1 text-brand-blue-950"><strong>Email Corporativo:</strong> ventas@ferreteriamoraymora.com • <strong>Sitio Oficial:</strong> www.ferreteriamoraymora.com</p>
                 </div>
               </div>
 
@@ -178,10 +202,30 @@ export default function QuoteModal({ quote, onClose }: QuoteModalProps) {
               </div>
 
               <div>
-                <h4 className="font-bold text-stone-400 uppercase tracking-wider mb-2">DETALLES DE LA ENTREGA / OBRA</h4>
+                <h4 className="font-bold text-stone-400 uppercase tracking-wider mb-2">DETALLES DE ENTREGA / RETIRO</h4>
                 <div className="space-y-1 text-stone-800 leading-normal">
                   <p><strong>Tipo de Obra:</strong> {quote.projectType}</p>
-                  <p><strong>Dirección Surtido:</strong> {quote.address}</p>
+                  {quote.pickupBranch ? (
+                    <>
+                      <p className="text-brand-orange-600 font-bold">Retiro en Sucursal Seleccionada</p>
+                      <p><strong>Sucursal Mora y Mora:</strong> {
+                        quote.pickupBranch === "acosta_centro" ? "Acosta Centro" :
+                        quote.pickupBranch === "acosta" ? "Acosta Norte (Principal)" : "Vuelta de Jorco"
+                      }</p>
+                      <p className="text-stone-500 text-[11px]">
+                        📍 {
+                          quote.pickupBranch === "acosta_centro" ? "Frente al Parque Central, San Ignacio de Acosta" :
+                          quote.pickupBranch === "acosta" ? "100m norte de la Clínica de la CCSS, San Ignacio" :
+                          "Vuelta de Jorco, contiguo al Supermercado Palí"
+                        }
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-emerald-600 font-bold">Envío a Domicilio</p>
+                      <p><strong>Dirección Surtido:</strong> {quote.address}</p>
+                    </>
+                  )}
                   {quote.notes && (
                     <p className="bg-stone-50 border border-stone-200 rounded-md p-2 text-stone-600 italic text-[11px] mt-1.5">
                       &ldquo;{quote.notes}&rdquo;
@@ -291,13 +335,13 @@ export default function QuoteModal({ quote, onClose }: QuoteModalProps) {
         {/* Bottom Footer (Hidden on Print) */}
         <div className="bg-stone-50 border-t border-stone-200 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 print:hidden">
           <p className="text-xs text-stone-500 text-center sm:text-left">
-            Si tiene alguna duda sobre esta cotización, contáctenos al <strong>2410-5890</strong> con su número de Folio.
+            {t("footerDudas", "Si tiene alguna duda, contáctenos: Acosta 2410-1515 • Jorco 2410-4848 con su número de Folio.")}
           </p>
           <button
             onClick={onClose}
             className="w-full sm:w-auto px-5 py-2 bg-stone-800 hover:bg-stone-900 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors"
           >
-            Cerrar Cotización
+            {t("closeQuote", "Cerrar Cotización")}
           </button>
         </div>
 

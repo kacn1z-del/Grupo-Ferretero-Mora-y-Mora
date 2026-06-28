@@ -7,18 +7,22 @@ import React from "react";
 import { Calculator, BrickWall, Paintbrush, ArrowRight, ShoppingCart, Info, CheckCircle2 } from "lucide-react";
 import { calcularConcreto, calcularPintura } from "../data";
 import { Product } from "../types";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface MaterialCalculatorsProps {
   onAddBulkToCart: (items: Array<{ product: Product; quantity: number }>) => void;
 }
 
 export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalculatorsProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = React.useState<"concreto" | "pintura">("concreto");
   
   // --- STATE FOR CONCRETE CALCULATOR ---
   const [largoLosa, setLargoLosa] = React.useState<number>(6);
   const [anchoLosa, setAnchoLosa] = React.useState<number>(5);
   const [espesorLosa, setEspesorLosa] = React.useState<number>(10); // 10 cm por defecto
+  const [tipoPiedra, setTipoPiedra] = React.useState<"cuarta" | "quintilla">("cuarta");
+  const [incluirMalla, setIncluirMalla] = React.useState<boolean>(false);
   const [concreteSuccess, setConcreteSuccess] = React.useState(false);
 
   // --- STATE FOR PAINT CALCULATOR ---
@@ -30,7 +34,7 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
 
   // Run Concrete Calculations
   const espesorEnMetros = espesorLosa / 100;
-  const concreteResult = calcularConcreto(largoLosa, anchoLosa, espesorEnMetros);
+  const concreteResult = calcularConcreto(largoLosa, anchoLosa, espesorEnMetros, tipoPiedra, incluirMalla);
 
   // Run Paint Calculations
   const areaTotalParedes = anchoPared * altoPared * murosCount;
@@ -39,8 +43,18 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
   const handleAddConcreteToCart = () => {
     const itemsToAdd = [
       { product: concreteResult.cementoSugerido, quantity: concreteResult.bultosCemento },
-      { product: concreteResult.varillaSugerida, quantity: concreteResult.varillasEstimadas }
+      { product: concreteResult.varillaSugerida, quantity: concreteResult.varillasEstimadas },
+      { product: concreteResult.arenaSugerida, quantity: concreteResult.metrosCubicosArena },
+      { product: concreteResult.piedraSugerida, quantity: concreteResult.metrosCubicosPiedra }
     ];
+    
+    if (incluirMalla && concreteResult.mallaSugerida && concreteResult.pliegosMalla > 0) {
+      itemsToAdd.push({
+        product: concreteResult.mallaSugerida,
+        quantity: concreteResult.pliegosMalla
+      });
+    }
+
     onAddBulkToCart(itemsToAdd);
     setConcreteSuccess(true);
     setTimeout(() => setConcreteSuccess(false), 2000);
@@ -69,10 +83,10 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
         <Calculator className="w-6 h-6 text-brand-orange-500" />
         <div>
           <h2 className="font-display font-extrabold text-lg leading-tight">
-            Calculadora Profesional de Materiales de Obra
+            {t("calcTitle", "Calculadora Profesional de Materiales de Obra")}
           </h2>
           <p className="text-stone-300 text-xs">
-            Evita desperdicios. Estima las cantidades exactas y agrégalas a tu cotización oficial.
+            {t("calcDesc", "Evita desperdicios. Estima las cantidades exactas y agrégalas a tu cotización oficial.")}
           </p>
         </div>
       </div>
@@ -88,7 +102,7 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
           }`}
         >
           <BrickWall className="w-4 h-4 text-brand-orange-500" />
-          <span>Firme y Losa (Cemento y Acero)</span>
+          <span>{t("concreteTab", "Firme y Losa (Cemento y Acero)")}</span>
         </button>
         <button
           onClick={() => setActiveTab("pintura")}
@@ -99,7 +113,7 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
           }`}
         >
           <Paintbrush className="w-4 h-4 text-brand-orange-500" />
-          <span>Muros y Fachadas (Pintura Vinílica)</span>
+          <span>{t("paintTab", "Muros y Fachadas (Pintura Vinílica)")}</span>
         </button>
       </div>
 
@@ -112,7 +126,7 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
             {/* Inputs Column */}
             <div className="md:col-span-5 space-y-4">
               <h3 className="font-display font-bold text-stone-800 text-sm md:text-base border-b pb-2">
-                Dimensiones de tu Firme o Losa
+                {t("concreteDimsTitle", "Dimensiones de tu Firme o Losa")}
               </h3>
               
               <div className="space-y-3">
@@ -162,12 +176,43 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
                     <option value={20}>20 cm (Tránsito pesado / bodegas)</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-600 mb-1">
+                    Tipo de Piedra (Agregado grueso)
+                  </label>
+                  <select
+                    value={tipoPiedra}
+                    onChange={(e) => setTipoPiedra(e.target.value as "cuarta" | "quintilla")}
+                    className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:border-brand-orange-500 bg-stone-50"
+                  >
+                    <option value="cuarta">Piedra Cuarta (1/2" a 3/4" - Estructural estándar)</option>
+                    <option value="quintilla">Piedra Quintilla (1/4" a 3/8" - Acabado Fino / Prefabricados)</option>
+                  </select>
+                </div>
+
+                <div className="pt-2">
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none bg-stone-50 border border-stone-200 rounded-lg p-3 hover:bg-stone-100/70 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={incluirMalla}
+                      onChange={(e) => setIncluirMalla(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded-sm border-stone-300 text-brand-orange-600 focus:ring-brand-orange-500 cursor-pointer"
+                    />
+                    <div>
+                      <span className="block text-xs font-bold text-brand-blue-950">¿Losa estructural / Mayor impacto?</span>
+                      <span className="block text-[10px] text-stone-500 leading-normal mt-0.5">
+                        Activa para trabajos con mayor impacto estructural (losas, cocheras o tránsito pesado). Añade la malla electrosoldada ArcelorMittal requerida.
+                      </span>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               <div className="bg-blue-50/60 border border-blue-100 rounded-lg p-3.5 flex items-start gap-2.5">
                 <Info className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-blue-900 leading-normal">
-                  Este cálculo emplea una proporción estándar de resistencia de concreto estructural de obra <strong>f&apos;c = 210 kg/cm²</strong> (apropiada para losas estructurales y firmes de carga en Costa Rica). Las varillas se estiman con un armado de cuadrícula a cada 20cm con traslapes y amarres (+15% de merma de seguridad).
+                  Este cálculo emplea una proporción estándar de resistencia de concreto estructural de obra <strong>f&apos;c = 210 kg/cm²</strong> (adecuada para Costa Rica). Se estiman varillas a cada 20cm con traslapes y amarres (+15% de merma de seguridad), m³ de arena fina, m³ de piedra triturada seleccionada y opcionalmente malla electrosoldada de refuerzo.
                 </p>
               </div>
             </div>
@@ -185,7 +230,7 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
                     <span className="text-xl font-mono font-extrabold text-stone-900">
                       {concreteResult.volumenM3} m³
                     </span>
-                    <span className="text-[9px] text-stone-500 block">de concreto requerido</span>
+                    <span className="text-[9px] text-stone-500 block">de mezcla requerida</span>
                   </div>
 
                   <div className="bg-white border border-stone-200 rounded-lg p-3 shadow-2xs">
@@ -193,7 +238,7 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
                     <span className="text-xl font-mono font-extrabold text-brand-orange-600">
                       {concreteResult.bultosCemento} Bultos
                     </span>
-                    <span className="text-[9px] text-stone-500 block">de cemento de 50kg</span>
+                    <span className="text-[9px] text-stone-500 block">de cemento Holcim 50kg</span>
                   </div>
 
                   <div className="bg-white border border-stone-200 rounded-lg p-3 shadow-2xs">
@@ -206,27 +251,53 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
 
                   <div className="bg-white border border-stone-200 rounded-lg p-3 shadow-2xs">
                     <span className="text-[10px] text-stone-400 font-bold block uppercase">Agregados Pétreos</span>
-                    <span className="text-sm font-mono font-bold text-stone-800 block mt-1">
-                      Arena: {concreteResult.toneladasArena} Ton.
+                    <span className="text-[11px] font-mono font-bold text-stone-800 block mt-1 leading-normal">
+                      • Arena Concreto: {concreteResult.metrosCubicosArena} m³
                     </span>
-                    <span className="text-sm font-mono font-bold text-stone-800 block">
-                      Grava: {concreteResult.toneladasGrava} Ton.
+                    <span className="text-[11px] font-mono font-bold text-stone-800 block leading-normal">
+                      • Piedra {tipoPiedra === "cuarta" ? "Cuarta" : "Quintilla"}: {concreteResult.metrosCubicosPiedra} m³
                     </span>
                   </div>
+
+                  {incluirMalla && (
+                    <div className="bg-brand-orange-500/10 border border-brand-orange-500/30 rounded-lg p-3 shadow-2xs col-span-2">
+                      <span className="text-[10px] text-brand-orange-600 font-bold block uppercase">Refuerzo Adicional de Alto Impacto</span>
+                      <span className="text-sm font-mono font-extrabold text-brand-blue-950 block mt-0.5">
+                        {concreteResult.pliegosMalla} Pliegos de Malla Electrosoldada 6x6 - 10/10
+                      </span>
+                      <span className="text-[9px] text-stone-500 block leading-tight mt-0.5">
+                        Mallas estructurales ArcelorMittal de 2.40m x 6.00m (con un 15% de traslape estimado) para evitar agrietamientos en losas expuestas a mayor impacto.
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2 border-t border-stone-200 pt-4">
                   <p className="text-xs text-stone-600 font-semibold mb-2">
-                    Productos recomendados listos para surtir:
+                    Pedido completo sugerido listo para añadir:
                   </p>
                   <div className="flex items-center justify-between text-xs bg-white border border-stone-200/60 rounded-lg p-2.5">
-                    <span className="font-semibold text-stone-800">{concreteResult.cementoSugerido.name}</span>
-                    <span className="font-mono font-bold text-stone-900">₡{concreteResult.cementoSugerido.price.toLocaleString("es-CR", { minimumFractionDigits: 2 })} c/u</span>
+                    <span className="font-semibold text-stone-800">{concreteResult.cementoSugerido.name} (x{concreteResult.bultosCemento})</span>
+                    <span className="font-mono font-bold text-stone-900">₡{(concreteResult.cementoSugerido.price * concreteResult.bultosCemento).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs bg-white border border-stone-200/60 rounded-lg p-2.5">
-                    <span className="font-semibold text-stone-800">{concreteResult.varillaSugerida.name}</span>
-                    <span className="font-mono font-bold text-stone-900">₡{concreteResult.varillaSugerida.price.toLocaleString("es-CR", { minimumFractionDigits: 2 })} c/u</span>
+                    <span className="font-semibold text-stone-800">{concreteResult.varillaSugerida.name} (x{concreteResult.varillasEstimadas})</span>
+                    <span className="font-mono font-bold text-stone-900">₡{(concreteResult.varillaSugerida.price * concreteResult.varillasEstimadas).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</span>
                   </div>
+                  <div className="flex items-center justify-between text-xs bg-white border border-stone-200/60 rounded-lg p-2.5">
+                    <span className="font-semibold text-stone-800">{concreteResult.arenaSugerida.name} (x{concreteResult.metrosCubicosArena} m³)</span>
+                    <span className="font-mono font-bold text-stone-900">₡{(concreteResult.arenaSugerida.price * concreteResult.metrosCubicosArena).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs bg-white border border-stone-200/60 rounded-lg p-2.5">
+                    <span className="font-semibold text-stone-800">{concreteResult.piedraSugerida.name} (x{concreteResult.metrosCubicosPiedra} m³)</span>
+                    <span className="font-mono font-bold text-stone-900">₡{(concreteResult.piedraSugerida.price * concreteResult.metrosCubicosPiedra).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  {incluirMalla && concreteResult.mallaSugerida && (
+                    <div className="flex items-center justify-between text-xs bg-brand-orange-50 border border-brand-orange-200/60 rounded-lg p-2.5">
+                      <span className="font-semibold text-brand-orange-950">{concreteResult.mallaSugerida.name} (x{concreteResult.pliegosMalla})</span>
+                      <span className="font-mono font-bold text-brand-orange-950">₡{(concreteResult.mallaSugerida.price * concreteResult.pliegosMalla).toLocaleString("es-CR", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -243,12 +314,12 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
                   {concreteSuccess ? (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>¡Materiales recomendados añadidos al carrito!</span>
+                      <span>¡Pedido de materiales añadidos al carrito!</span>
                     </>
                   ) : (
                     <>
                       <ShoppingCart className="w-4 h-4" />
-                      <span>Añadir {concreteResult.bultosCemento} Cemento y {concreteResult.varillasEstimadas} Varillas al Carrito</span>
+                      <span>Añadir Materiales de Concreto al Carrito</span>
                     </>
                   )}
                 </button>

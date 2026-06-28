@@ -25,14 +25,73 @@ import ProductCard from "./components/ProductCard";
 import MaterialCalculators from "./components/MaterialCalculators";
 import CartSection from "./components/CartSection";
 import QuoteModal from "./components/QuoteModal";
+import LiveChat from "./components/LiveChat";
+import BrandShowcase from "./components/BrandShowcase";
+import InteractiveBranches from "./components/InteractiveBranches";
+import AdminPortal from "./components/AdminPortal";
 import { PRODUCTS, PRODUCT_CATEGORIES } from "./data";
 import { CartItem, Product, QuotationRequest } from "./types";
+import { useLanguage } from "./contexts/LanguageContext";
 
 export default function App() {
+  const { language, translateProducts, isTranslating, t } = useLanguage();
+
   // Navigation & UI States
   const [activeSection, setActiveSection] = React.useState<"catalog" | "calculators" | "cart">("catalog");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [isAdminPortalOpen, setIsAdminPortalOpen] = React.useState(false);
+
+  // Live products inventory state with LocalStorage persistence
+  const [productsList, setProductsList] = React.useState<Product[]>(() => {
+    try {
+      const saved = localStorage.getItem("moraymora_products_state");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error("Error loading products state from localstorage:", e);
+    }
+    
+    // Default initial branch stocks & photo arrays if not set
+    return PRODUCTS.map(p => ({
+      ...p,
+      branchStock: p.branchStock || {
+        acosta_centro: p.stock > 10 ? Math.floor(p.stock * 0.5) : Math.floor(p.stock * 0.4),
+        acosta: p.stock > 10 ? Math.floor(p.stock * 0.3) : Math.floor(p.stock * 0.3),
+        jorco: p.stock > 10 ? Math.floor(p.stock * 0.2) : Math.floor(p.stock * 0.3)
+      },
+      branchPhotos: p.branchPhotos || {
+        acosta_centro: [],
+        acosta: [],
+        jorco: []
+      }
+    }));
+  });
+
+  const [translatedProducts, setTranslatedProducts] = React.useState<Product[]>(productsList);
+
+  React.useEffect(() => {
+    let active = true;
+    const fetchTranslations = async () => {
+      const translated = await translateProducts(productsList);
+      if (active) {
+        setTranslatedProducts(translated);
+      }
+    };
+    fetchTranslations();
+    return () => {
+      active = false;
+    };
+  }, [language, productsList]);
+
+  // Sync products state back to LocalStorage
+  React.useEffect(() => {
+    localStorage.setItem("moraymora_products_state", JSON.stringify(productsList));
+  }, [productsList]);
   
   // Shopping Cart state with LocalStorage persistence
   const [cart, setCart] = React.useState<CartItem[]>(() => {
@@ -135,8 +194,18 @@ export default function App() {
     handleClearCart(); // Reset the cart after generating an official quote sheet
   };
 
+  const handleSelectBrand = (brandName: string) => {
+    setSearchTerm(brandName);
+    const catTitle = document.getElementById("catalog-title");
+    if (catTitle) {
+      setTimeout(() => {
+        catTitle.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  };
+
   // Catalog filtering
-  const filteredProducts = PRODUCTS.filter((product) => {
+  const filteredProducts = translatedProducts.filter((product) => {
     const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
     const matchesSearch = 
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -177,6 +246,7 @@ export default function App() {
         categories={PRODUCT_CATEGORIES}
         quoteHistory={quoteHistory}
         onViewHistoryQuote={(quote) => setGeneratedQuote(quote)}
+        onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
       />
 
       {/* Main Body Layout */}
@@ -199,6 +269,8 @@ export default function App() {
 
             {/* Catalog Grid Area */}
             <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-6 pt-4" id="catalog-section">
+              <BrandShowcase onSelectBrand={handleSelectBrand} selectedBrand={searchTerm} />
+
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-stone-200 pb-4" id="catalog-title">
                 <div>
                   <h2 className="text-xl md:text-2xl font-display font-black tracking-tight text-brand-blue-950 uppercase">
@@ -311,6 +383,11 @@ export default function App() {
         </div>
       )}
 
+      {/* Interactive Branches and Hours Panel */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pb-16 w-full print:hidden">
+        <InteractiveBranches />
+      </div>
+
       {/* Corporate Professional Footer */}
       <footer className="bg-brand-zinc-950 text-stone-400 pt-16 pb-12 px-4 md:px-8 border-t border-stone-800 print:hidden" id="mora-footer">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -362,28 +439,72 @@ export default function App() {
                   Mi Carrito / Cotizaciones
                 </button>
               </li>
-              <li className="text-stone-500 cursor-not-allowed">Precios de Mayoreo</li>
+              <li>
+                <button 
+                  onClick={() => setIsAdminPortalOpen(true)}
+                  className="text-brand-orange-500 hover:text-brand-orange-400 font-bold transition-colors cursor-pointer text-left flex items-center gap-1"
+                >
+                  ⚙️ Portal Sucursales (Admin)
+                </button>
+              </li>
             </ul>
           </div>
 
           {/* Contact matrix */}
           <div className="space-y-4">
-            <h5 className="text-xs font-bold text-stone-200 uppercase tracking-wider">Servicio & Soporte</h5>
-            <div className="text-xs space-y-2.5 leading-relaxed">
-              <p className="flex items-start gap-2">
-                <PhoneCall className="w-4 h-4 text-brand-orange-500 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Atención Telefónica:</strong><br />
-                  2410-5890 (Costa Rica)<br />
-                  Lunes a Sábado: 7:00 AM - 6:00 PM
-                </span>
-              </p>
-              <p className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-brand-orange-500 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Locales Costa Rica:</strong><br />
-                  Acosta (Parque y Clínica CCSS) y Vuelta de Jorco
-                </span>
+            <h5 className="text-xs font-bold text-stone-200 uppercase tracking-wider">Sucursales & Contacto Directo</h5>
+            <div className="text-xs space-y-3.5 leading-relaxed text-stone-300">
+              <div className="space-y-1.5 border-l-2 border-brand-orange-500 pl-2.5">
+                <span className="font-bold text-stone-100 text-[11px] uppercase tracking-wider block">📍 Acosta Norte (Sucursal Principal)</span>
+                <p className="text-[11px] text-stone-400">100m norte de la Clínica de la CCSS</p>
+                <p className="font-mono text-[11px] flex items-center gap-1.5">
+                  <span className="text-stone-400">Tel:</span>
+                  <a href="tel:24101515" className="hover:text-brand-orange-400 transition-colors">2410-1515</a>
+                </p>
+                <p className="text-[11px] flex items-center gap-1.5 font-mono">
+                  <span className="text-stone-400">WhatsApp:</span>
+                  <a 
+                    href="https://wa.me/50660686454?text=Hola%20Mora%20y%20Mora%20Acosta%20Norte,%20solicito%20atención%20al%20cliente."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-emerald-400 hover:underline hover:text-emerald-300 font-semibold"
+                  >
+                    +506 6068-6454
+                  </a>
+                </p>
+              </div>
+
+              <div className="space-y-1.5 border-l-2 border-amber-500 pl-2.5">
+                <span className="font-bold text-stone-100 text-[11px] uppercase tracking-wider block">📍 Sucursal Acosta Centro</span>
+                <p className="text-[11px] text-stone-400">Frente al Parque Central de Acosta</p>
+                <p className="text-[10px] text-stone-500 italic">
+                  (Consultas canalizadas por Acosta Norte)
+                </p>
+              </div>
+
+              <div className="space-y-1.5 border-l-2 border-sky-500 pl-2.5">
+                <span className="font-bold text-stone-100 text-[11px] uppercase tracking-wider block">📍 Sucursal Vuelta de Jorco</span>
+                <p className="text-[11px] text-stone-400">Contiguo al Supermercado Palí</p>
+                <p className="font-mono text-[11px] flex items-center gap-1.5">
+                  <span className="text-stone-400">Tels:</span>
+                  <a href="tel:24104848" className="hover:text-brand-orange-400 transition-colors">2410-4848</a>, 
+                  <a href="tel:24104747" className="hover:text-brand-orange-400 transition-colors">2410-4747</a>
+                </p>
+                <p className="text-[11px] flex items-center gap-1.5 font-mono">
+                  <span className="text-stone-400">WhatsApp:</span>
+                  <a 
+                    href="https://wa.me/50687113034?text=Hola%20Mora%20y%20Mora%20Vuelta%20de%20Jorco,%20solicito%20atención%20al%20cliente."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-emerald-400 hover:underline hover:text-emerald-300 font-semibold"
+                  >
+                    +506 8711-3034
+                  </a>
+                </p>
+              </div>
+
+              <p className="text-[10px] text-stone-500">
+                <strong>Horario Unificado:</strong> Lunes a Sábado: 7:00 AM - 6:00 PM
               </p>
             </div>
           </div>
@@ -410,6 +531,17 @@ export default function App() {
         quote={generatedQuote}
         onClose={() => setGeneratedQuote(null)}
       />
+
+      {/* Administration Portal Dashboard Modal */}
+      <AdminPortal
+        products={productsList}
+        onUpdateProducts={(updated) => setProductsList(updated)}
+        isOpen={isAdminPortalOpen}
+        onClose={() => setIsAdminPortalOpen(false)}
+      />
+
+      {/* Intelligent Live Chat Support Assistant */}
+      <LiveChat cart={cart} />
 
     </div>
   );

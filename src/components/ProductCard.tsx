@@ -6,6 +6,7 @@
 import React from "react";
 import { Hammer, BrickWall, Zap, Droplet, Lightbulb, Paintbrush, Boxes, Plus, Minus, Check, ChevronDown, ChevronUp, ShieldAlert, BadgeCheck } from "lucide-react";
 import { Product } from "../types";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface ProductCardProps {
   key?: any;
@@ -15,9 +16,16 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart, currentCartQuantity }: ProductCardProps) {
+  const { language, t } = useLanguage();
   const [quantity, setQuantity] = React.useState(1);
   const [showSpecs, setShowSpecs] = React.useState(false);
   const [addedAnimation, setAddedAnimation] = React.useState(false);
+  const [zoomedPhoto, setZoomedPhoto] = React.useState<{ url: string; branch: string } | null>(null);
+
+  // Check if this product has any branch-specific photos
+  const hasBranchPhotos = Object.values(product.branchPhotos || {}).some(
+    (photos) => photos && photos.length > 0
+  );
 
   // Helper to match category to lucide icon
   const getCategoryIcon = (category: string) => {
@@ -88,6 +96,15 @@ export default function ProductCard({ product, onAddToCart, currentCartQuantity 
     currency: "CRC",
   }).format(product.price * 1.13);
 
+  const getCategoryLabel = (category: string) => {
+    if (category === "construccion") return t("construccion", "Construcción");
+    if (category === "herramientas") return t("herramientas", "Herramientas Eléctricas");
+    if (category === "pintura") return t("pinturas", "Pinturas y Acabados");
+    if (category === "electricidad") return t("electricidad", "Electricidad");
+    if (category === "plomeria") return t("fontaneria", "Plomería y Grifería");
+    return category;
+  };
+
   return (
     <div 
       className="bg-white rounded-xl border border-stone-200 shadow-xs hover:shadow-md transition-all flex flex-col h-full group overflow-hidden"
@@ -106,18 +123,18 @@ export default function ProductCard({ product, onAddToCart, currentCartQuantity 
         {product.stock > 10 ? (
           <span className="absolute top-3 right-3 bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Stock Disponible
+            {t("stockAvailable", "Stock Disponible")}
           </span>
         ) : (
           <span className="absolute top-3 right-3 bg-amber-50 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
             <ShieldAlert className="w-3 h-3" />
-            Bajo Stock ({product.stock})
+            {t("lowStock", "Bajo Stock")} ({product.stock})
           </span>
         )}
 
         {/* Product Unit Indicator */}
         <span className="absolute bottom-2.5 right-3 text-[11px] font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md">
-          Unidad: {product.unit}
+          {t("unit", "Unidad")}: {product.unit}
         </span>
       </div>
 
@@ -125,7 +142,7 @@ export default function ProductCard({ product, onAddToCart, currentCartQuantity 
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div className="space-y-1.5">
           <span className="text-[11px] font-bold uppercase tracking-wider text-brand-orange-600 block">
-            {product.category.replace("-", " ")}
+            {getCategoryLabel(product.category)}
           </span>
           <h3 className="font-display font-bold text-stone-900 group-hover:text-brand-blue-900 transition-colors text-base line-clamp-2 leading-snug">
             {product.name}
@@ -143,7 +160,7 @@ export default function ProductCard({ product, onAddToCart, currentCartQuantity 
                 {formattedPrice}
               </span>
               <span className="text-[10px] text-stone-400 font-bold ml-1 uppercase">
-                Antes de IVA
+                {t("beforeIva", "Antes de IVA")}
               </span>
             </div>
             <div className="text-right">
@@ -151,7 +168,7 @@ export default function ProductCard({ product, onAddToCart, currentCartQuantity 
                 {formattedIvaPrice}
               </span>
               <span className="text-[9px] text-stone-400 font-medium block">
-                con IVA incl.
+                {t("withIva", "con IVA incl.")}
               </span>
             </div>
           </div>
@@ -194,14 +211,14 @@ export default function ProductCard({ product, onAddToCart, currentCartQuantity 
               {addedAnimation ? (
                 <>
                   <Check className="w-3.5 h-3.5" />
-                  <span>¡Añadido!</span>
+                  <span>{t("added", "¡Añadido!")}</span>
                 </>
               ) : (
                 <>
-                  <span>Agregar</span>
+                  <span>{t("add", "Agregar")}</span>
                   {currentCartQuantity > 0 && (
                     <span className="bg-brand-orange-500/30 text-brand-orange-200 text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1">
-                      en cart: {currentCartQuantity}
+                      {language === "en" ? "in cart" : language === "es" ? "en carro" : "carro"}: {currentCartQuantity}
                     </span>
                   )}
                 </>
@@ -209,13 +226,111 @@ export default function ProductCard({ product, onAddToCart, currentCartQuantity 
             </button>
           </div>
 
+          {/* Real-time Stock per Branch Grid */}
+          <div className="bg-stone-50 border border-stone-200/60 rounded-xl p-2.5 space-y-1.5 shadow-2xs">
+            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+              {t("branchAvailability", "Disponibilidad por Sucursal")}:
+            </span>
+            <div className="grid grid-cols-3 gap-1.5">
+              <div className="bg-white border border-stone-150 p-1.5 rounded-lg text-center shadow-3xs">
+                <span className="text-[9px] font-bold text-stone-500 block leading-tight">Acosta Centro</span>
+                <strong className={`font-mono text-xs block mt-0.5 ${product.branchStock?.acosta_centro ? "text-emerald-600 font-extrabold" : "text-stone-400"}`}>
+                  {product.branchStock?.acosta_centro ?? 0}
+                </strong>
+              </div>
+              <div className="bg-white border border-stone-150 p-1.5 rounded-lg text-center shadow-3xs">
+                <span className="text-[9px] font-bold text-stone-500 block leading-tight">Acosta Norte</span>
+                <strong className={`font-mono text-xs block mt-0.5 ${product.branchStock?.acosta ? "text-emerald-600 font-extrabold" : "text-stone-400"}`}>
+                  {product.branchStock?.acosta ?? 0}
+                </strong>
+              </div>
+              <div className="bg-white border border-stone-150 p-1.5 rounded-lg text-center shadow-3xs">
+                <span className="text-[9px] font-bold text-stone-500 block leading-tight">Vuelta Jorco</span>
+                <strong className={`font-mono text-xs block mt-0.5 ${product.branchStock?.jorco ? "text-emerald-600 font-extrabold" : "text-stone-400"}`}>
+                  {product.branchStock?.jorco ?? 0}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Real Warehouse Stock Photos Section */}
+          {hasBranchPhotos && (
+            <div className="border-t border-dashed border-stone-200 pt-2 space-y-1.5">
+              <span className="text-[9px] bg-emerald-500/10 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1 w-fit">
+                <BadgeCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{t("realWarehousePhoto", "Foto Real Verificada en Bodega")}</span>
+              </span>
+              
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                {Object.entries(product.branchPhotos || {}).map(([branchKey, photos]) => {
+                  const branchLabel = branchKey === "acosta_centro" 
+                    ? "Acosta Centro" 
+                    : branchKey === "acosta" 
+                    ? "Acosta Norte" 
+                    : "Jorco";
+                  
+                  return (photos || []).map((photoUrl, photoIdx) => (
+                    <button 
+                      key={`${branchKey}-${photoIdx}`} 
+                      onClick={() => setZoomedPhoto({ url: photoUrl, branch: branchLabel })}
+                      className="relative rounded-lg overflow-hidden border border-stone-200 aspect-video w-20 shrink-0 bg-stone-100 cursor-zoom-in group/photo shadow-2xs hover:border-brand-orange-500/50 transition-colors"
+                    >
+                      <img 
+                        src={photoUrl} 
+                        alt={`Stock real ${branchLabel}`} 
+                        className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform" 
+                        referrerPolicy="no-referrer"
+                      />
+                      <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[7px] text-white py-0.5 px-1 font-bold text-center uppercase truncate leading-none">
+                        {branchLabel}
+                      </span>
+                    </button>
+                  ));
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Zoomed Lightbox Modal */}
+          {zoomedPhoto && (
+            <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-xs z-50 flex items-center justify-center p-4" onClick={() => setZoomedPhoto(null)}>
+              <div className="bg-white rounded-2xl overflow-hidden max-w-lg w-full shadow-2xl border border-stone-200 relative" onClick={e => e.stopPropagation()}>
+                <div className="bg-brand-blue-950 text-white px-4 py-2.5 flex justify-between items-center text-xs font-bold border-b border-brand-blue-900">
+                  <span className="flex items-center gap-1.5 uppercase tracking-wider">
+                    <BadgeCheck className="w-4 h-4 text-brand-orange-500" />
+                    {t("warehousePhoto", "Foto de Bodega")} ({zoomedPhoto.branch})
+                  </span>
+                  <button 
+                    onClick={() => setZoomedPhoto(null)}
+                    className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-[10px] cursor-pointer"
+                  >
+                    {t("close", "Cerrar")}
+                  </button>
+                </div>
+                <div className="aspect-square bg-stone-100">
+                  <img 
+                    src={zoomedPhoto.url} 
+                    alt="Evidencia real de stock en bodega" 
+                    className="w-full h-full object-contain"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="p-3.5 bg-stone-50 border-t border-stone-200 text-center">
+                  <p className="text-[10px] text-stone-500 font-medium">
+                    {t("photoDisclaimer", "Fotografía de stock capturada en tiempo real")} {zoomedPhoto.branch}.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Expand Specifications Link */}
           <div>
             <button
               onClick={() => setShowSpecs(!showSpecs)}
               className="w-full flex items-center justify-between text-stone-500 hover:text-stone-800 text-[11px] font-semibold py-1 border-t border-dashed border-stone-100 transition-colors cursor-pointer"
             >
-              <span>Ver ficha técnica</span>
+              <span>{t("viewSpecs", "Ver ficha técnica")}</span>
               {showSpecs ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
 

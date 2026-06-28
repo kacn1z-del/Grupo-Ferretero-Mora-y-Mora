@@ -39,6 +39,7 @@ interface MenuDrawerProps {
   quoteHistory: QuotationRequest[];
   onViewHistoryQuote: (quote: QuotationRequest) => void;
   userEmail?: string;
+  onOpenAdminPortal: () => void;
 }
 
 export default function MenuDrawer({
@@ -50,7 +51,8 @@ export default function MenuDrawer({
   onNavigateToCalculators,
   quoteHistory,
   onViewHistoryQuote,
-  userEmail = "kchinchilla.pos@gmail.com"
+  userEmail = "kchinchilla.pos@gmail.com",
+  onOpenAdminPortal
 }: MenuDrawerProps) {
   const [activeTab, setActiveTab] = React.useState<"menu" | "cuenta">("menu");
   
@@ -239,26 +241,32 @@ export default function MenuDrawer({
                   )}
                 </button>
                 {expandedSections.tiendas && (
-                  <div className="bg-stone-50/60 pl-6 pr-4 py-2 space-y-3 text-[12px] text-stone-600 leading-relaxed animate-fade-in border-b border-stone-100">
-                    <div>
-                      <h5 className="font-bold text-stone-800 text-xs">📍 Acosta Centro</h5>
-                      <p>Frente al Parque Central de Acosta, San José.</p>
-                      <span className="text-[10px] text-stone-400 flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3 h-3" /> Lun-Sáb: 7am - 6pm
+                  <div className="bg-stone-50/60 pl-6 pr-4 py-2.5 space-y-3.5 text-[12px] text-stone-600 leading-relaxed animate-fade-in border-b border-stone-100">
+                    <div className="space-y-1">
+                      <h5 className="font-bold text-brand-blue-950 text-xs">📍 Acosta Norte (Sucursal Principal)</h5>
+                      <p className="text-stone-500">100m norte de la Clínica de la CCSS, San Ignacio.</p>
+                      <div className="font-mono text-[11px] text-stone-700 space-y-0.5">
+                        <p>📞 Teléfono: <a href="tel:24101515" className="font-semibold text-sky-600 hover:underline">2410-1515</a></p>
+                        <p>💬 WhatsApp: <a href="https://wa.me/50660686454?text=Hola%20Mora%20y%20Mora%20Acosta%20Norte,%20solicito%20atención%20al%20cliente." target="_blank" rel="noreferrer" className="font-bold text-emerald-600 hover:underline">+506 6068-6454</a></p>
+                      </div>
+                      <span className="text-[10px] text-stone-400 flex items-center gap-1 mt-0.5 font-mono">
+                        <Clock className="w-3 h-3" /> Lun-Sáb: 7:00am - 6:00pm
                       </span>
                     </div>
-                    <div className="border-t border-stone-200/50 pt-2">
-                      <h5 className="font-bold text-stone-800 text-xs">📍 Acosta Clínica CCSS</h5>
-                      <p>100m norte de la Clínica de la CCSS, San Ignacio.</p>
-                      <span className="text-[10px] text-stone-400 flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3 h-3" /> Lun-Sáb: 7am - 6pm
-                      </span>
+                    <div className="border-t border-stone-200/50 pt-2.5 space-y-1">
+                      <h5 className="font-bold text-brand-blue-950 text-xs">📍 Sucursal Acosta Centro</h5>
+                      <p className="text-stone-500">Frente al Parque Central de Acosta.</p>
+                      <p className="text-[10px] text-stone-500 italic font-medium">(Consultas canalizadas por Acosta Norte)</p>
                     </div>
-                    <div className="border-t border-stone-200/50 pt-2">
-                      <h5 className="font-bold text-stone-800 text-xs">📍 Vuelta de Jorco</h5>
-                      <p>Vuelta de Jorco, contiguo al Ebais central.</p>
-                      <span className="text-[10px] text-stone-400 flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3 h-3" /> Lun-Sáb: 7am - 6pm
+                    <div className="border-t border-stone-200/50 pt-2.5 space-y-1">
+                      <h5 className="font-bold text-brand-blue-950 text-xs">📍 Sucursal Vuelta de Jorco</h5>
+                      <p className="text-stone-500">Vuelta de Jorco, contiguo al supermercado Palí.</p>
+                      <div className="font-mono text-[11px] text-stone-700 space-y-0.5">
+                        <p>📞 Teléfonos: <a href="tel:24104848" className="font-semibold text-sky-600 hover:underline">2410-4848</a> / <a href="tel:24104747" className="font-semibold text-sky-600 hover:underline">2410-4747</a></p>
+                        <p>💬 WhatsApp: <a href="https://wa.me/50687113034?text=Hola%20Mora%20y%20Mora%20Vuelta%20de%20Jorco,%20solicito%20atención%20al%20cliente." target="_blank" rel="noreferrer" className="font-bold text-emerald-600 hover:underline">+506 8711-3034</a></p>
+                      </div>
+                      <span className="text-[10px] text-stone-400 flex items-center gap-1 mt-0.5 font-mono">
+                        <Clock className="w-3 h-3" /> Lun-Sáb: 7:00am - 6:00pm
                       </span>
                     </div>
                   </div>
@@ -441,7 +449,7 @@ export default function MenuDrawer({
                   Surtido completo, crédito comercial corporativo y entregas masivas en todo Acosta y San José.
                 </p>
                 <a 
-                  href="https://wa.me/50688885890?text=Hola%20Mora%20y%20Mora,%20deseo%20información%20sobre%20ventas%20corporativas%20y%20mayoreo."
+                  href="https://wa.me/50660686454?text=Hola%20Mora%20y%20Mora%20Acosta,%20deseo%20información%20sobre%20ventas%20corporativas%20y%20mayoreo."
                   target="_blank"
                   rel="noreferrer"
                   className="inline-block mt-2 px-3 py-1 bg-brand-orange-600 hover:bg-brand-orange-700 text-white rounded text-[11px] font-bold transition-colors"
@@ -464,6 +472,28 @@ export default function MenuDrawer({
                   <h4 className="text-xs font-bold text-stone-800">{userEmail}</h4>
                   <p className="text-[10px] text-stone-500">Cliente de Acosta • Perfil Particular</p>
                 </div>
+              </div>
+
+              {/* Admin Portal Fast Trigger */}
+              <div className="bg-brand-orange-500/15 border border-brand-orange-500/35 rounded-xl p-4 space-y-2.5 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 bg-brand-orange-600 rounded-lg text-white">
+                    <Settings className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h5 className="text-[11px] font-black text-brand-blue-950 uppercase tracking-tight">Portal de Colaboradores</h5>
+                    <p className="text-[9px] text-stone-500 leading-normal">Acceso administrativo para Jorco, Acosta Centro y Acosta Norte.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    onOpenAdminPortal();
+                    onClose();
+                  }}
+                  className="w-full text-center bg-brand-blue-950 hover:bg-brand-blue-900 text-white font-bold py-2 rounded-lg text-[10px] uppercase tracking-wide cursor-pointer transition-colors"
+                >
+                  Abrir Panel de Control
+                </button>
               </div>
 
               {/* Real persistent Quote History! */}
@@ -537,29 +567,52 @@ export default function MenuDrawer({
               </div>
 
               {/* Direct Fast Support */}
-              <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 space-y-2">
-                <h5 className="text-[11px] font-bold text-stone-800 flex items-center gap-1">
+              <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 space-y-3.5">
+                <h5 className="text-[11px] font-bold text-stone-800 flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5 text-brand-orange-600" />
-                  <span>Atención al Cliente Acosta</span>
+                  <span>Central de Asistencia y Pedidos</span>
                 </h5>
-                <p className="text-[10px] text-stone-500 leading-normal">
-                  ¿Desea formalizar un pedido de bultos masivo o programar un camión de volteo? Llámenos directamente:
-                </p>
-                <div className="flex gap-2">
-                  <a 
-                    href="tel:24105890"
-                    className="flex-1 text-center py-1.5 bg-stone-800 hover:bg-stone-950 text-white rounded text-[10px] font-semibold transition-colors"
-                  >
-                    Llamar 2410-5890
-                  </a>
-                  <a 
-                    href="https://wa.me/50688885890?text=Hola%20Mora%20y%20Mora,%20solicito%20atención%20para%20un%20pedido."
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-1 text-center py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-semibold transition-colors"
-                  >
-                    WhatsApp
-                  </a>
+                
+                {/* Acosta Support Sub-block */}
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-bold text-brand-orange-700 uppercase tracking-wider">📞 Acosta Norte (Oficina Principal)</p>
+                  <div className="flex gap-1.5">
+                    <a 
+                      href="tel:24101515"
+                      className="flex-1 text-center py-1.5 bg-stone-800 hover:bg-stone-900 text-white rounded text-[10px] font-semibold transition-colors font-mono"
+                    >
+                      Llamar 2410-1515
+                    </a>
+                    <a 
+                      href="https://wa.me/50660686454?text=Hola%20Mora%20y%20Mora%20Acosta%20Norte,%20solicito%20atención%20para%20un%20pedido."
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 text-center py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-semibold transition-colors font-mono"
+                    >
+                      WhatsApp
+                    </a>
+                  </div>
+                </div>
+
+                {/* Jorco Support Sub-block */}
+                <div className="space-y-1.5 border-t border-stone-250/65 pt-3">
+                  <p className="text-[10px] font-bold text-sky-700 uppercase tracking-wider">📞 Sucursal Vuelta de Jorco</p>
+                  <div className="flex gap-1.5">
+                    <a 
+                      href="tel:24104848"
+                      className="flex-1 text-center py-1.5 bg-stone-800 hover:bg-stone-900 text-white rounded text-[10px] font-semibold transition-colors font-mono"
+                    >
+                      Llamar 2410-4848
+                    </a>
+                    <a 
+                      href="https://wa.me/50687113034?text=Hola%20Mora%20y%20Mora%20Vuelta%20de%20Jorco,%20solicito%20atención%20para%20un%20pedido."
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 text-center py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-semibold transition-colors font-mono"
+                    >
+                      WhatsApp
+                    </a>
+                  </div>
                 </div>
               </div>
 

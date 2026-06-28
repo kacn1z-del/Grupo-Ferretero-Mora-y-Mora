@@ -6,6 +6,7 @@
 import React from "react";
 import { ShoppingCart, Trash2, Plus, Minus, FileText, ChevronLeft, User, Mail, Phone, MapPin, Building, ShieldCheck, Truck, ClipboardList } from "lucide-react";
 import { CartItem, Product, QuotationRequest } from "../types";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface CartSectionProps {
   cart: CartItem[];
@@ -24,6 +25,7 @@ export default function CartSection({
   onGenerateQuote,
   onBackToCatalog,
 }: CartSectionProps) {
+  const { t } = useLanguage();
   // Form States
   const [customerName, setCustomerName] = React.useState("");
   const [companyName, setCompanyName] = React.useState("");
@@ -33,6 +35,8 @@ export default function CartSection({
   const [address, setAddress] = React.useState("");
   const [projectType, setProjectType] = React.useState("Residencial");
   const [notes, setNotes] = React.useState("");
+  const [deliveryMethod, setDeliveryMethod] = React.useState<"domicilio" | "sucursal">("domicilio");
+  const [pickupBranch, setPickupBranch] = React.useState<"acosta_centro" | "acosta" | "jorco">("acosta_centro");
 
   // Validation States
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -43,7 +47,7 @@ export default function CartSection({
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   const iva = subtotal * 0.13;
   const shippingThreshold = 150000; // Free shipping over ₡150,000
-  const shippingCost = subtotal >= shippingThreshold || subtotal === 0 ? 0 : 10000;
+  const shippingCost = deliveryMethod === "sucursal" || subtotal >= shippingThreshold || subtotal === 0 ? 0 : 10000;
   const total = subtotal + iva + shippingCost;
 
   const handleValidate = () => {
@@ -59,7 +63,10 @@ export default function CartSection({
     } else if (!/^\d{8}$/.test(phone.replace(/[\s-]+/g, ""))) {
       tempErrors.phone = "Deben ser 8 dígitos numéricos.";
     }
-    if (!address.trim()) tempErrors.address = "La dirección de entrega es obligatoria.";
+    
+    if (deliveryMethod === "domicilio" && !address.trim()) {
+      tempErrors.address = "La dirección de entrega es obligatoria para envíos a domicilio.";
+    }
     
     if (cedula.trim() && !/^[0-9A-Z-]{9,15}$/i.test(cedula.trim())) {
       tempErrors.cedula = "Cédula física o jurídica con formato inválido (Ej. 1-1234-5678).";
@@ -104,9 +111,12 @@ export default function CartSection({
             cedula: cedula.toUpperCase() || undefined,
             email,
             phone,
-            address,
+            address: deliveryMethod === "sucursal" ? `Retiro en Sucursal: ${
+              pickupBranch === "acosta_centro" ? "Acosta Centro" : pickupBranch === "acosta" ? "Acosta Norte" : "Vuelta de Jorco"
+            }` : address,
             projectType,
             notes: notes || undefined,
+            pickupBranch: deliveryMethod === "sucursal" ? pickupBranch : undefined,
             items: [...cart],
             subtotal,
             iva,
@@ -132,10 +142,10 @@ export default function CartSection({
         </div>
         <div className="space-y-2">
           <h3 className="font-display font-extrabold text-stone-900 text-lg md:text-xl">
-            Su cotizador de materiales está vacío
+            {t("cartEmptyTitle", "Su cotizador de materiales está vacío")}
           </h3>
           <p className="text-stone-500 text-xs md:text-sm max-w-md mx-auto leading-relaxed">
-            Añada bultos de cemento, varillas de hierro, herramientas profesionales DeWalt o pinturas Lanco del catálogo para generar su cotización oficial con IVA desglosado.
+            {t("cartEmptyDesc", "Añada bultos de cemento, varillas de hierro, herramientas profesionales DeWalt o pinturas Lanco del catálogo para generar su cotización oficial con IVA desglosado.")}
           </p>
         </div>
         <div>
@@ -143,7 +153,7 @@ export default function CartSection({
             onClick={onBackToCatalog}
             className="bg-brand-blue-900 hover:bg-brand-blue-950 text-white font-semibold py-2.5 px-6 rounded-lg text-xs md:text-sm transition-all shadow-md cursor-pointer"
           >
-            Explorar Catálogo Interactivo
+            {t("exploreCatalog", "Explorar Catálogo Interactivo")}
           </button>
         </div>
       </div>
@@ -152,7 +162,6 @@ export default function CartSection({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start" id="cart-section-container">
-      
       {/* LEFT: Items Table & Shipping Bar */}
       <div className="lg:col-span-7 space-y-6">
         
@@ -162,21 +171,21 @@ export default function CartSection({
           className="inline-flex items-center space-x-1.5 text-stone-500 hover:text-brand-blue-950 text-xs font-semibold cursor-pointer py-1"
         >
           <ChevronLeft className="w-4 h-4" />
-          <span>Continuar agregando productos</span>
+          <span>{t("continueAdding", "Continuar agregando productos")}</span>
         </button>
 
         <div className="bg-white rounded-xl border border-stone-200 p-5 md:p-6 shadow-xs">
           <div className="flex justify-between items-center border-b pb-4 mb-4">
             <h2 className="font-display font-extrabold text-stone-950 text-base md:text-lg flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-brand-orange-500" />
-              <span>Lista de Materiales Seleccionados</span>
+              <span>{t("selectedMaterialsList", "Lista de Materiales Seleccionados")}</span>
             </h2>
             <button
               onClick={onClearCart}
               className="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1 cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Vaciar Lista</span>
+              <span>{t("clearList", "Vaciar Lista")}</span>
             </button>
           </div>
 
@@ -185,21 +194,21 @@ export default function CartSection({
             <div className="flex justify-between items-center text-xs">
               <span className="font-semibold text-stone-600 flex items-center gap-1">
                 <Truck className="w-4 h-4 text-brand-orange-500" />
-                Entrega gratis Acosta, Vuelta de Jorco y cercanías:
+                {t("freeDeliveryProgress", "Entrega gratis Acosta, Vuelta de Jorco y cercanías:")}
               </span>
               <span className="font-mono font-bold">
-                {subtotal >= shippingThreshold ? "¡Alcanzada!" : `Faltan ₡${(shippingThreshold - subtotal).toLocaleString("es-CR", { minimumFractionDigits: 2 })}`}
+                {subtotal >= shippingThreshold ? t("thresholdReached", "¡Alcanzada!") : `${t("thresholdMissing", "Faltan")} ₡${(shippingThreshold - subtotal).toLocaleString("es-CR", { minimumFractionDigits: 2 })}`}
               </span>
             </div>
             
             <div className="w-full bg-stone-200 h-2 rounded-full overflow-hidden">
               <div 
-                className="bg-brand-orange-500 h-full transition-all duration-500"
+                className="bg-brand-orange-50 h-full transition-all duration-500"
                 style={{ width: `${Math.min(100, (subtotal / shippingThreshold) * 100)}%` }}
               />
             </div>
             <p className="text-[10px] text-stone-400">
-              *En pedidos menores a ₡150,000.00 se cobrará un flete consolidado de ₡10,000.00.
+              {t("deliveryDisclaimer", "*En pedidos menores a ₡150,000.00 se cobrará un flete consolidado de ₡10,000.00.")}
             </p>
           </div>
 
@@ -219,7 +228,7 @@ export default function CartSection({
                       {item.product.name}
                     </h4>
                     <p className="text-xs text-stone-500 mt-0.5">
-                      Unidad: {item.product.unit} • ₡{item.product.price.toLocaleString("es-CR", { minimumFractionDigits: 2 })} c/u
+                      {t("unit", "Unidad")}: {item.product.unit} • ₡{item.product.price.toLocaleString("es-CR", { minimumFractionDigits: 2 })} c/u
                     </p>
                   </div>
 
@@ -255,7 +264,7 @@ export default function CartSection({
                         onClick={() => onRemoveFromCart(item.product.id)}
                         className="text-[10px] text-red-500 hover:text-red-700 font-semibold cursor-pointer"
                       >
-                        Eliminar
+                        {t("delete", "Eliminar")}
                       </button>
                     </div>
                   </div>
@@ -274,29 +283,29 @@ export default function CartSection({
         {/* Price Calculations */}
         <div className="bg-brand-blue-950 text-white rounded-xl p-5 md:p-6 shadow-md border border-brand-blue-900">
           <h3 className="font-display font-bold text-sm md:text-base border-b border-brand-blue-900 pb-3 mb-4">
-            Resumen de Presupuesto
+            {t("budgetSummary", "Resumen de Presupuesto")}
           </h3>
           
           <div className="space-y-2.5 text-xs font-mono">
             <div className="flex justify-between text-stone-300">
-              <span>Subtotal (Neto):</span>
+              <span>{t("subtotalNeto", "Subtotal (Neto)")}:</span>
               <span>
                 ₡{subtotal.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CRC
               </span>
             </div>
             
             <div className="flex justify-between text-stone-300">
-              <span>I.V.A. Trasladado (13%):</span>
+              <span>{t("ivaLabel", "I.V.A. Trasladado (13%)")}:</span>
               <span>
                 ₡{iva.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CRC
               </span>
             </div>
 
             <div className="flex justify-between text-stone-300">
-              <span>Flete / Envío a Obra:</span>
+              <span>{t("fleteShipping", "Flete / Envío a Obra")}:</span>
               <span>
                 {shippingCost === 0 ? (
-                  <strong className="text-emerald-400 font-bold font-sans uppercase">GRATIS</strong>
+                  <strong className="text-emerald-400 font-bold font-sans uppercase">{t("gratis", "GRATIS")}</strong>
                 ) : (
                   `₡${shippingCost.toLocaleString("es-CR", { minimumFractionDigits: 2 })} CRC`
                 )}
@@ -304,7 +313,7 @@ export default function CartSection({
             </div>
 
             <div className="border-t border-brand-blue-900 pt-3 flex justify-between text-base font-extrabold text-white">
-              <span className="font-sans">TOTAL ESTIMADO:</span>
+              <span className="font-sans">{t("estimatedTotal", "TOTAL ESTIMADO")}:</span>
               <span>
                 ₡{total.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CRC
               </span>
@@ -316,7 +325,7 @@ export default function CartSection({
         <div className="bg-white rounded-xl border border-stone-200 p-5 md:p-6 shadow-xs">
           <h3 className="font-display font-extrabold text-stone-900 text-sm md:text-base border-b pb-3 mb-4 flex items-center gap-1.5">
             <FileText className="w-5 h-5 text-brand-orange-500" />
-            <span>Datos de Cotización</span>
+            <span>{t("quoteData", "Datos de Cotización")}</span>
           </h3>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -413,7 +422,7 @@ export default function CartSection({
                   </div>
                   <input
                     type="tel"
-                    placeholder="88885890"
+                    placeholder="6068-6454"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     maxLength={12}
@@ -426,10 +435,63 @@ export default function CartSection({
               </div>
             </div>
 
+            {/* Método de Surtido / Entrega */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-600 mb-1.5">
+                Método de Entrega / Surtido *
+              </label>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setDeliveryMethod("domicilio")}
+                  className={`py-2.5 px-3 rounded-lg border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    deliveryMethod === "domicilio"
+                      ? "bg-brand-blue-950 border-brand-blue-950 text-white shadow-xs"
+                      : "bg-white border-stone-200 text-stone-600 hover:bg-stone-50"
+                  }`}
+                >
+                  <Truck className="w-4 h-4 shrink-0" />
+                  <span>Envío a Domicilio</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeliveryMethod("sucursal")}
+                  className={`py-2.5 px-3 rounded-lg border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    deliveryMethod === "sucursal"
+                      ? "bg-brand-blue-950 border-brand-blue-950 text-white shadow-xs"
+                      : "bg-white border-stone-200 text-stone-600 hover:bg-stone-50"
+                  }`}
+                >
+                  <Building className="w-4 h-4 shrink-0" />
+                  <span>Retirar en Sucursal</span>
+                </button>
+              </div>
+
+              {deliveryMethod === "sucursal" && (
+                <div className="bg-brand-orange-500/10 border border-brand-orange-500/30 rounded-lg p-3.5 space-y-2 mb-3">
+                  <label className="block text-[11px] font-bold text-brand-blue-950 mb-1">
+                    Seleccione la Sucursal Mora y Mora para retirar:
+                  </label>
+                  <select
+                    value={pickupBranch}
+                    onChange={(e) => setPickupBranch(e.target.value as "acosta_centro" | "acosta" | "jorco")}
+                    className="w-full text-xs border border-brand-orange-500/30 rounded-lg p-2 focus:outline-none bg-white font-bold text-stone-850"
+                  >
+                    <option value="acosta">Mora y Mora Acosta Norte (Sucursal Principal)</option>
+                    <option value="acosta_centro">Mora y Mora Acosta Centro</option>
+                    <option value="jorco">Mora y Mora Vuelta de Jorco</option>
+                  </select>
+                  <p className="text-[10px] text-stone-600 leading-normal">
+                    * El costo de flete se cancela de inmediato (₡0.00). Podrá retirar sus materiales directamente en la sucursal elegida una vez generada y procesada la cotización oficial.
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Surtido address */}
             <div>
               <label className="block text-xs font-semibold text-stone-600 mb-1">
-                Dirección Completa Surtido de Obra *
+                {deliveryMethod === "domicilio" ? "Dirección Completa Surtido de Obra *" : "Dirección de Facturación / Contacto (Opcional)"}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -437,7 +499,7 @@ export default function CartSection({
                 </div>
                 <input
                   type="text"
-                  placeholder="Dirección, Barrio, Distrito, Acosta"
+                  placeholder={deliveryMethod === "domicilio" ? "Dirección, Barrio, Distrito, Acosta" : "Provincia, Cantón, Distrito (Opcional)"}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className={`w-full text-xs md:text-sm border rounded-lg pl-9 pr-3 py-2 focus:outline-none ${

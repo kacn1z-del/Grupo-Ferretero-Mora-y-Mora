@@ -82,6 +82,71 @@ export const PRODUCTS: Product[] = [
       "Beneficio": "Menor desperdicio, alta retención de agua, solo agregue agua"
     }
   },
+  {
+    id: "const-04",
+    name: "Malla Electrosoldada de Alta Resistencia 6x6 - 10/10",
+    brand: "ArcelorMittal",
+    category: "construccion",
+    price: 17500.0,
+    description: "Malla electrosoldada ideal para refuerzo de losas de concreto, pisos de cocheras, aceras y firmes estructurales de alto impacto.",
+    unit: "Pliego (2.4m x 6.0m)",
+    stock: 150,
+    featured: true,
+    specifications: {
+      "Dimensiones": "2.40 x 6.00 metros",
+      "Espesor": "Calibre 10 (10/10)",
+      "Área de cobertura": "14.4 m²",
+      "Uso": "Pisos de concreto, losas de entrepiso y fundaciones"
+    }
+  },
+  {
+    id: "const-05",
+    name: "Arena de Río Limpia para Mezcla de Concreto",
+    brand: "Mora y Mora",
+    category: "construccion",
+    price: 19500.0,
+    description: "Arena de río fina de excelente calidad, completamente limpia y cernida. Indispensable para la preparación de mezclas de concreto estructural de alta resistencia.",
+    unit: "Metro Cúbico (m³)",
+    stock: 500,
+    featured: false,
+    specifications: {
+      "Presentación": "Metro cúbico o porción a granel",
+      "Origen": "Acosta, San José",
+      "Calidad": "Cernida, libre de lodos y materia orgánica"
+    }
+  },
+  {
+    id: "const-06",
+    name: "Piedra Cuarta Triturada de Alta Resistencia",
+    brand: "Mora y Mora",
+    category: "construccion",
+    price: 21500.0,
+    description: "Piedra triturada de tamaño medio (Piedra Cuarta). Ideal para mezclas de concreto estructural de alta resistencia, vigas sísmicas de fundación, columnas y losas de tránsito pesado.",
+    unit: "Metro Cúbico (m³)",
+    stock: 500,
+    featured: false,
+    specifications: {
+      "Tamaño aproximado": "1/2\" a 3/4\"",
+      "Presentación": "Metro cúbico a granel",
+      "Uso principal": "Concreto estructural, columnas, vigas y cimientos fuertes"
+    }
+  },
+  {
+    id: "const-07",
+    name: "Piedra Quintilla Triturada para Acabados Finos",
+    brand: "Mora y Mora",
+    category: "construccion",
+    price: 22000.0,
+    description: "Piedra triturada pequeña (Piedra Quintilla). Recomendada para prefabricados, losas de entrepiso delgadas, firmes residenciales de menor espesor y concretos con denso armado de acero.",
+    unit: "Metro Cúbico (m³)",
+    stock: 500,
+    featured: false,
+    specifications: {
+      "Tamaño aproximado": "1/4\" a 3/8\"",
+      "Presentación": "Metro cúbico a granel",
+      "Uso principal": "Prefabricados, losas delgadas de entrepiso y repellos"
+    }
+  },
 
   // --- HERRAMIENTAS ELÉCTRICAS ---
   {
@@ -350,18 +415,30 @@ export function calcularPintura(area: number, capas: number = 2) {
  * @param largo en metros
  * @param ancho en metros
  * @param espesor en metros (ej. 0.10 para 10cm)
- * @returns { volumenM3: number, bultosCemento: number, toneladasArena: number, toneladasGrava: number, cementoSugerido: Product, varillaSugerida: Product, varillasEstimadas: number }
+ * @param tipoPiedra "cuarta" | "quintilla"
+ * @param incluirMalla si requiere malla electrosoldada para losas de alto impacto
+ * @returns { volumenM3: number, bultosCemento: number, metrosCubicosArena: number, metrosCubicosPiedra: number, pliegosMalla: number, cementoSugerido: Product, varillaSugerida: Product, arenaSugerida: Product, piedraSugerida: Product, mallaSugerida?: Product, varillasEstimadas: number }
  */
-export function calcularConcreto(largo: number, ancho: number, espesor: number) {
+export function calcularConcreto(
+  largo: number, 
+  ancho: number, 
+  espesor: number, 
+  tipoPiedra: "cuarta" | "quintilla" = "cuarta",
+  incluirMalla: boolean = false
+) {
   const volumenM3 = parseFloat((largo * ancho * espesor).toFixed(2));
+  const areaLosa = largo * ancho;
   
-  // Para 1 m³ de concreto estructural:
-  // - Cemento: 7 bultos de 50kg
-  // - Arena: ~0.88 toneladas
-  // - Grava: ~1.34 toneladas
-  const bultosCemento = Math.ceil(volumenM3 * 7);
-  const toneladasArena = parseFloat((volumenM3 * 0.88).toFixed(2));
-  const toneladasGrava = parseFloat((volumenM3 * 1.34).toFixed(2));
+  // Para 1 m³ de concreto estructural en Costa Rica:
+  // - Cemento: ~7.5 bultos de 50kg
+  // - Arena de río: ~0.55 m³
+  // - Piedra triturada: ~0.85 m³
+  const bultosCemento = Math.ceil(volumenM3 * 7.5);
+  const metrosCubicosArena = parseFloat(Math.max(0.5, volumenM3 * 0.55).toFixed(1));
+  const metrosCubicosPiedra = parseFloat(Math.max(0.5, volumenM3 * 0.85).toFixed(1));
+  
+  // Estimación de malla electrosoldada: 1 pliego cubre 14.4 m2 (2.4m x 6m). Añadimos 15% por traslapes.
+  const pliegosMalla = incluirMalla ? Math.ceil((areaLosa / 14.4) * 1.15) : 0;
   
   // Estimación de varillas de refuerzo en malla cuadricular de 20cm x 20cm
   const varillasEspacio = 0.20; // 20cm
@@ -373,14 +450,21 @@ export function calcularConcreto(largo: number, ancho: number, espesor: number) 
 
   const cementoSugerido = PRODUCTS.find(p => p.id === "const-01")!;
   const varillaSugerida = PRODUCTS.find(p => p.id === "const-02")!;
+  const arenaSugerida = PRODUCTS.find(p => p.id === "const-05")!;
+  const piedraSugerida = PRODUCTS.find(p => p.id === (tipoPiedra === "quintilla" ? "const-07" : "const-06"))!;
+  const mallaSugerida = PRODUCTS.find(p => p.id === "const-04")!;
   
   return {
     volumenM3,
     bultosCemento,
-    toneladasArena,
-    toneladasGrava,
+    metrosCubicosArena,
+    metrosCubicosPiedra,
+    pliegosMalla,
     varillasEstimadas,
     cementoSugerido,
-    varillaSugerida
+    varillaSugerida,
+    arenaSugerida,
+    piedraSugerida,
+    mallaSugerida
   };
 }
