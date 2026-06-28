@@ -110,15 +110,7 @@ export default function Header({
               className="flex items-center space-x-3 cursor-pointer select-none group"
               onClick={onNavigateToCatalog}
             >
-             <img src="https://i.ibb.co/Y4Qwsp5P/2-B6-D1-FB4-9-E37-4-FCB-80-A8-FC01-E91-BDA6-C.png" alt="Mora y Mora" className="h-12 w-auto object-contain" />
-            <div>
-  <h1 className="text-xl md:text-2xl font-displ...
-    MORA Y MORA
-  </h1>
-  <span className="text-[10px] md:text-xs text-b...
-    {t("title").toUpperCase()}
-  </span>
-</div>
+              <img src="https://i.ibb.co/Y4Qwsp5P/2-B6-D1-FB4-9-E37-4-FCB-80-A8-FC01-E91-BDA6-C.png" alt="Grupo Ferretero Mora y Mora" className="h-12 md:h-14 w-auto object-contain" />
             </div>
 
             {/* Desktop Menu Trigger */}
