@@ -383,7 +383,7 @@ export const PRODUCTS: Product[] = [
       "Dilución": "Listo para usar o dilución leve con agua limpia",
       "Rendimiento": "Hasta 35 m² por galón según porosidad"
     }
-  }
+  },
   {
     id: "pint-03",
     name: "Pintura Acrílica Cubeta Sur Master Blanca (5 Galones)",
@@ -514,4 +514,3 @@ export function calcularConcreto(
     mallaSugerida
   };
 }
-
