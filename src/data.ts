@@ -384,6 +384,41 @@ export const PRODUCTS: Product[] = [
       "Rendimiento": "Hasta 35 m² por galón según porosidad"
     }
   }
+  {
+    id: "pint-03",
+    name: "Pintura Acrílica Cubeta Sur Master Blanca (5 Galones)",
+    brand: "Sur",
+    category: "pintura",
+    price: 69500.0,
+    description: "Pintura acrílica de alto rendimiento marca Sur, buena opción costo-beneficio para proyectos residenciales interiores y exteriores.",
+    unit: "Cubeta de 5 Galones",
+    stock: 40,
+    featured: false,
+    specifications: {
+      "Capacidad": "5 Galones (18.9 Litros)",
+      "Acabado": "Mate",
+      "Rendimiento teórico": "150 a 170 m² por cubeta a dos manos",
+      "Uso recomendado": "Superficies interiores y exteriores de concreto y repello"
+    }
+  },
+  {
+    id: "pint-04",
+    name: "Pintura Acrílica Cubeta Lanco Maxima Gris Perla (5 Galones)",
+    brand: "Lanco",
+    category: "pintura",
+    price: 79500.0,
+    description: "Pintura acrílica premium Lanco en tono gris perla, misma fórmula de máxima resistencia a la intemperie de la línea Maxima.",
+    unit: "Cubeta de 5 Galones",
+    stock: 35,
+    featured: false,
+    specifications: {
+      "Capacidad": "5 Galones (18.9 Litros)",
+      "Acabado": "Mate / Satinado",
+      "Lavabilidad": "Excelente resistencia (fórmula de silicona acrílica)",
+      "Rendimiento teórico": "160 a 180 m² por cubeta a dos manos",
+      "Uso recomendado": "Superficies exteriores e interiores de concreto, yeso, madera"
+    }
+  }
 ];
 
 // --- CALCULADORAS DE MATERIALES ---
@@ -394,20 +429,31 @@ export const PRODUCTS: Product[] = [
  * @param capas Cantidad de capas de pintura (default 2)
  * @returns { litros: number, cubetas19l: number, galones4l: number, productoSugerido: Product }
  */
-export function calcularPintura(area: number, capas: number = 2) {
+export function calcularPintura(area: number, capas: number = 2, productoId: string = "pint-01") {
   // Un galón rinde aprox 35 m² por capa. Una cubeta (5 galones) rinde aprox 175 m² por capa.
   const rendimientoPorCubeta = 175;
   const cubetas19l = Math.max(1, Math.ceil((area * capas) / rendimientoPorCubeta));
   const galones4l = Math.max(1, Math.ceil((area * capas) / 35));
-  
-  const pinturaSugerida = PRODUCTS.find(p => p.id === "pint-01")!;
-  
+
+  const pinturaSugerida =
+    PRODUCTS.find(p => p.id === productoId) ?? PRODUCTS.find(p => p.id === "pint-01")!;
+
   return {
     litrosTotales: parseFloat((area * capas * 0.11).toFixed(1)), // Estimado de litros aproximados (0.11 litros por m2)
     cubetas19l,
     galones4l,
     pinturaSugerida
   };
+}
+
+/**
+ * Devuelve la lista de pinturas del catálogo que el cliente puede escoger
+ * en la calculadora (excluye selladores y otros productos de preparación).
+ */
+export function getOpcionesDePintura(): Product[] {
+  return PRODUCTS.filter(
+    p => p.category === "pintura" && !p.name.toLowerCase().includes("sellador")
+  );
 }
 
 /**
