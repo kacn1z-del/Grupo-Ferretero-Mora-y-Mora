@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Calculator, BrickWall, Paintbrush, ArrowRight, ShoppingCart, Info, CheckCircle2 } from "lucide-react";
-import { calcularConcreto, calcularPintura } from "../data";
+import { calcularConcreto, calcularPintura, getOpcionesDePintura } from "../data";
 import { Product } from "../types";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -31,6 +31,10 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
   const [murosCount, setMurosCount] = React.useState<number>(4);
   const [capasPintura, setCapasPintura] = React.useState<number>(2);
   const [paintSuccess, setPaintSuccess] = React.useState(false);
+  const opcionesPintura = React.useMemo(() => getOpcionesDePintura(), []);
+  const [selectedPaintId, setSelectedPaintId] = React.useState<string>(
+    opcionesPintura[0]?.id ?? "pint-01"
+  );
 
   // Run Concrete Calculations
   const espesorEnMetros = espesorLosa / 100;
@@ -38,7 +42,7 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
 
   // Run Paint Calculations
   const areaTotalParedes = anchoPared * altoPared * murosCount;
-  const paintResult = calcularPintura(areaTotalParedes, capasPintura);
+  const paintResult = calcularPintura(areaTotalParedes, capasPintura, selectedPaintId);
 
   const handleAddConcreteToCart = () => {
     const itemsToAdd = [
@@ -399,6 +403,23 @@ export default function MaterialCalculators({ onAddBulkToCart }: MaterialCalcula
                     </select>
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-stone-600 mb-1">
+                  Pintura a utilizar
+                </label>
+                <select
+                  value={selectedPaintId}
+                  onChange={(e) => setSelectedPaintId(e.target.value)}
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:border-brand-orange-500 bg-stone-50"
+                >
+                  {opcionesPintura.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} — ₡{p.price.toLocaleString("es-CR")}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="bg-emerald-50/60 border border-emerald-100 rounded-lg p-3.5 flex items-start gap-2.5">
