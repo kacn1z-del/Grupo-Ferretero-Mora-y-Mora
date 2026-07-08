@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenAI } from "@google/genai";
-import { PRODUCTS } from "./_shared/products";
+import { PRODUCTS } from "./_shared/products.js";
 
 // Initialize the Gemini client (usa la variable de entorno configurada en Vercel)
 const ai = new GoogleGenAI({
