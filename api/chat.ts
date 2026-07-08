@@ -90,6 +90,13 @@ REGLAS DE RESPUESTA:
         : [{ text: typeof msg.parts === "string" ? msg.parts : (msg.text || "") }],
     }));
 
+    // Gemini requires chat history to start with a "user" turn. The frontend
+    // always includes Martina's canned welcome message (role "model") first,
+    // so strip any leading "model" turns before creating the chat session.
+    while (formattedHistory.length > 0 && formattedHistory[0].role === "model") {
+      formattedHistory.shift();
+    }
+
     // Create a chat session with the model
     const chatSession = ai.chats.create({
       model: "gemini-3.5-flash",
@@ -113,4 +120,3 @@ REGLAS DE RESPUESTA:
     });
   }
 }
-
