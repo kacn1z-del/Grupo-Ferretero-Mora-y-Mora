@@ -9,6 +9,8 @@ export interface ProductLite {
   price: number;
   description: string;
   unit: string;
+  stock?: number;
+  featured?: boolean;
   specifications: Record<string, string>;
 }
 
